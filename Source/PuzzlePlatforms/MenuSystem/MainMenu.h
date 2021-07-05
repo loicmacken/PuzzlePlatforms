@@ -32,6 +32,9 @@ private:
 	UButton* JoinButton;
 
 	UPROPERTY(meta = (BindWidget))
+	UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidget))
 	UWidgetSwitcher* MenuSwitcher;
 
 	UPROPERTY(meta = (BindWidget))
@@ -57,6 +60,9 @@ private:
 
 	UFUNCTION()
 	void JoinServer();
+
+	UFUNCTION()
+	void QuitPressed();
 	
 protected:
 	virtual bool Initialize() override;

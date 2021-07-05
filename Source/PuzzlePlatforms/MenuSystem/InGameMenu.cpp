@@ -12,6 +12,12 @@ void UInGameMenu::CancelMenu()
 
 void UInGameMenu::ReturnToMainMenu()
 {
+	if (MenuInterface != nullptr)
+	{
+		Teardown();
+
+		MenuInterface->ReturnToMainMenu();
+	}
 }
 
 bool UInGameMenu::Initialize()
