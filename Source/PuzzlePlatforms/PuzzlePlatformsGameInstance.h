@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "OnlineSubsystem.h"
 
 #include "MenuSystem/MenuInterface.h"
 
@@ -35,6 +36,12 @@ private:
 
 	TSubclassOf<UUserWidget> InGameMenuClass;
 
+	IOnlineSessionPtr SessionInterface;
+
+	void OnCreateSessionComplete(FName SessionName, bool Success);
+	void OnDestroySessionComplete(FName SessionName, bool Success);
+
+	void CreateSession();
 
 public:
 	UFUNCTION(BlueprintCallable)
