@@ -14,6 +14,7 @@
 #include "MenuSystem/MenuWidget.h"
 
 const static FName SESSION_NAME = TEXT("My Session Game");
+const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
 UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitializer& ObjectInitializer)
 {
@@ -93,13 +94,23 @@ void UPuzzlePlatformsGameInstance::OnFindSessionsComplete(bool Success)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Found session: %s"), *Result.GetSessionIdStr());
 			FServerData Data;
-			Data.Name = Result.GetSessionIdStr();
-			UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Data.Name);
+			// Data.Name = Result.GetSessionIdStr();
+			// UE_LOG(LogTemp, Warning, TEXT("Session: %s"), *Data.Name);
 			Data.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
 			Data.CurrentPlayers = Data.MaxPlayers - Result.Session.NumOpenPublicConnections;
 			Data.Ping = Result.PingInMs;
 			Data.HostUsername = Result.Session.OwningUserName;
-			UE_LOG(LogTemp, Warning, TEXT("Host: %s"), *Data.HostUsername);
+			FString Name;
+			// UE_LOG(LogTemp, Warning, TEXT("Host: %s"), *Data.HostUsername);
+			if (Result.Session.SessionSettings.Get(SERVER_NAME_SETTINGS_KEY, Name))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Server name: %s"), *Name);
+				Data.Name = Name;
+			}
+			else
+			{
+				Data.Name = "Unknown Name";
+			}
 			ServerDataArray.Add(Data);
 		}
 
@@ -148,16 +159,20 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 		{
 			SessionSettings.bIsLANMatch = false;
 		}
-		SessionSettings.NumPublicConnections = 2;
+		SessionSettings.NumPublicConnections = NumPlayers;
 		SessionSettings.bShouldAdvertise = true;
 		SessionSettings.bUsesPresence = true;
+		SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, ServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		
 		SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);		
 	}
 }
 
-void UPuzzlePlatformsGameInstance::Host()
+void UPuzzlePlatformsGameInstance::Host(const FString& InServerName, uint16 InNumPlayers)
 {
+	ServerName = InServerName;
+	NumPlayers = InNumPlayers;
+
 	if (SessionInterface.IsValid())
 	{
 		FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);

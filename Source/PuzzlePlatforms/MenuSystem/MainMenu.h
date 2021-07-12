@@ -15,6 +15,7 @@ class UEditableTextBox;
 class UPanelWidget;
 class UUserWidget;
 class UServerRow;
+class UComboBoxString;
 
 USTRUCT()
 struct FServerData
@@ -85,11 +86,29 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UButton* ServerListMenu_JoinButton;
 
+	UPROPERTY(meta = (BindWidget))
+	UWidget* HostMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	UEditableTextBox* HostMenu_ServerName;
+
+	UPROPERTY(meta = (BindWidget))
+	UComboBoxString* HostMenu_NumPlayers;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* HostMenu_BackButton;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* HostMenu_HostButton;
+
 	UFUNCTION()
 	void HostServer();
 
 	UFUNCTION()
 	void OpenJoinMenu();
+
+	UFUNCTION()
+	void OpenHostMenu();
 
 	UFUNCTION()
 	void OpenServerListMenu();

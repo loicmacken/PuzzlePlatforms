@@ -40,6 +40,9 @@ private:
 
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+
+	FString ServerName;
+	uint16 NumPlayers;
 	
 	void OnCreateSessionComplete(FName SessionName, bool Success);
 	void OnDestroySessionComplete(FName SessionName, bool Success);
@@ -56,7 +59,7 @@ public:
 	void LoadInGameMenu();
 
 	UFUNCTION(Exec)
-	void Host() override;
+	void Host(const FString& InServerName, uint16 InNumPlayers) override;
 	
 	UFUNCTION(Exec)
 	void Join(uint32 Index) override;

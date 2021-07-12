@@ -9,6 +9,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Components/EditableTextBox.h"
 #include "Components/TextBlock.h"
+#include "Components/ComboBoxString.h"
 
 #include "ServerRow.h"
 
@@ -45,21 +46,21 @@ void UMainMenu::SetServerList(TArray<FServerData> ServerDataArray)
 
 	// TESTING AREA
 
-	for (int32 j = 0; j < 10; j++)
-	{
-		UServerRow* ServerRow = CreateWidget<UServerRow>(World, ServerRowClass);
-		if (!ensure(ServerRow != nullptr)) return;
+	// for (int32 j = 0; j < 10; j++)
+	// {
+	// 	UServerRow* ServerRow = CreateWidget<UServerRow>(World, ServerRowClass);
+	// 	if (!ensure(ServerRow != nullptr)) return;
+	//
+	// 	ServerRow->ServerName->SetText(FText::FromString(FString::Printf(TEXT("40FE728A4471F7F2D5C50E9D8565ADA%d"), j)));
+	// 	ServerRow->SetNumPlayers(FMath::RandRange(0,10), FMath::RandRange(10,20));
+	// 	ServerRow->Ping->SetText(FText::FromString(FString::Printf(TEXT("%d"), FMath::RandRange(1,100))));
+	// 	ServerRow->HostUserName->SetText(FText::FromString(TEXT("DESKTOP-9QJT7VP-DF2C057B4CB158CB6D910C93E54D0A7D")));
+	// 	ServerRow->Setup(this, i);
+	// 	++i;
+	// 	
+	// 	ServerListMenu_ScrollBox->AddChild(ServerRow);
+	// }
 
-		ServerRow->ServerName->SetText(FText::FromString(FString::Printf(TEXT("40FE728A4471F7F2D5C50E9D8565ADA%d"), j)));
-		ServerRow->SetNumPlayers(FMath::RandRange(0,10), FMath::RandRange(10,20));
-		ServerRow->Ping->SetText(FText::FromString(FString::Printf(TEXT("%d"), FMath::RandRange(1,100))));
-		ServerRow->HostUserName->SetText(FText::FromString(TEXT("DESKTOP-9QJT7VP-DF2C057B4CB158CB6D910C93E54D0A7D")));
-		ServerRow->Setup(this, i);
-		++i;
-		
-		ServerListMenu_ScrollBox->AddChild(ServerRow);
-	}
-	
 	// TESTING AREA
 }
 
@@ -73,8 +74,20 @@ void UMainMenu::HostServer()
 {
 	if (MenuInterface != nullptr)
 	{
-		MenuInterface->Host();
+		if (!ensure(HostMenu_ServerName != nullptr)) return;
+		const FString& ServerName = HostMenu_ServerName->GetText().ToString();
+
+		if (!ensure(HostMenu_NumPlayers != nullptr)) return;
+		const uint16 Index = HostMenu_NumPlayers->GetSelectedIndex();
+		const uint16 NumPlayers = (Index + 1) * 2;
+
+		MenuInterface->Host(ServerName, NumPlayers);
 	}
+
+	// if (MenuInterface != nullptr)
+	// {
+	// 	MenuInterface->Host();
+	// }
 }
 
 void UMainMenu::OpenJoinMenu()
@@ -83,6 +96,14 @@ void UMainMenu::OpenJoinMenu()
 	if (!ensure(JoinMenu != nullptr)) return;
 
 	MenuSwitcher->SetActiveWidget(JoinMenu);
+}
+
+void UMainMenu::OpenHostMenu()
+{
+	if (!ensure(MenuSwitcher != nullptr)) return;
+	if (!ensure(HostMenu != nullptr)) return;
+
+	MenuSwitcher->SetActiveWidget(HostMenu);
 }
 
 void UMainMenu::OpenServerListMenu()
@@ -158,8 +179,11 @@ bool UMainMenu::Initialize()
 	bool bIsSuccesful = Super::Initialize();
 	if (!bIsSuccesful) return false;
 
+	// if (!ensure(HostButton != nullptr)) return false;
+	// HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+
 	if (!ensure(HostButton != nullptr)) return false;
-	HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
+	HostButton->OnClicked.AddDynamic(this, &UMainMenu::OpenHostMenu);
 
 	// if (!ensure(JoinButton != nullptr)) return false;
 	// JoinButton->OnClicked.AddDynamic(this, &UMainMenu::OpenJoinMenu);
@@ -181,6 +205,12 @@ bool UMainMenu::Initialize()
 
 	if (!ensure(JoinMenu_JoinButton != nullptr)) return false;
 	ServerListMenu_JoinButton->OnClicked.AddDynamic(this, &UMainMenu::JoinServerBySelection);
+
+	if (!ensure(JoinMenu_BackButton != nullptr)) return false;
+	HostMenu_BackButton->OnClicked.AddDynamic(this, &UMainMenu::CloseSubMenu);
+
+	if (!ensure(JoinMenu_JoinButton != nullptr)) return false;
+	HostMenu_HostButton->OnClicked.AddDynamic(this, &UMainMenu::HostServer);
 
 	return true;
 }
