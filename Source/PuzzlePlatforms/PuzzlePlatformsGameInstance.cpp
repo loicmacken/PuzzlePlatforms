@@ -8,12 +8,13 @@
 #include "Blueprint/UserWidget.h"
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "UObject/UnrealNames.h"
 
 #include "MenuSystem/MainMenu.h"
 #include "MenuSystem/InGameMenu.h"
 #include "MenuSystem/MenuWidget.h"
 
-const static FName SESSION_NAME = TEXT("My Session Game");
+// const static FName SESSION_NAME = TEXT("Game");
 const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
 
 UPuzzlePlatformsGameInstance::UPuzzlePlatformsGameInstance(const FObjectInitializer& ObjectInitializer)
@@ -48,6 +49,11 @@ void UPuzzlePlatformsGameInstance::Init()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Online Subsystem not found"));
 	}
+
+	if (GEngine != nullptr)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &UPuzzlePlatformsGameInstance::OnNetworkFailure);
+	}
 }
 
 void UPuzzlePlatformsGameInstance::OnCreateSessionComplete(FName SessionName, bool Success)
@@ -71,7 +77,7 @@ void UPuzzlePlatformsGameInstance::OnCreateSessionComplete(FName SessionName, bo
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) return;
 
-	World->ServerTravel("/Game/ThirdPersonCPP/Maps/ThirdPersonExampleMap?listen");
+	World->ServerTravel("/Game/PuzzlePlatforms/Maps/Lobby?listen");
 }
 
 void UPuzzlePlatformsGameInstance::OnDestroySessionComplete(FName SessionName, bool Success)
@@ -146,6 +152,13 @@ void UPuzzlePlatformsGameInstance::OnJoinSessionComplete(FName SessionName, EOnJ
 	}
 }
 
+void UPuzzlePlatformsGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver,
+	ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Session ended by host. Returning to main menu"));
+	ReturnToMainMenu();
+}
+
 void UPuzzlePlatformsGameInstance::CreateSession()
 {
 	if (SessionInterface.IsValid())
@@ -164,7 +177,7 @@ void UPuzzlePlatformsGameInstance::CreateSession()
 		SessionSettings.bUsesPresence = true;
 		SessionSettings.Set(SERVER_NAME_SETTINGS_KEY, ServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 		
-		SessionInterface->CreateSession(0, SESSION_NAME, SessionSettings);		
+		SessionInterface->CreateSession(0, EName::NAME_GameSession, SessionSettings);		
 	}
 }
 
@@ -175,10 +188,10 @@ void UPuzzlePlatformsGameInstance::Host(const FString& InServerName, uint16 InNu
 
 	if (SessionInterface.IsValid())
 	{
-		FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(SESSION_NAME);
+		FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(EName::NAME_GameSession);
 		if (ExistingSession)
 		{
-			SessionInterface->DestroySession(SESSION_NAME);
+			SessionInterface->DestroySession(EName::NAME_GameSession);
 		}
 		else
 		{
@@ -197,7 +210,7 @@ void UPuzzlePlatformsGameInstance::Join(uint32 Index)
 		MainMenu->Teardown();
 	}
 
-	SessionInterface->JoinSession(0, SESSION_NAME, SessionSearch->SearchResults[Index]);
+	SessionInterface->JoinSession(0, EName::NAME_GameSession, SessionSearch->SearchResults[Index]);
 	
 	// if (MainMenu != nullptr)
 	// {
@@ -213,6 +226,14 @@ void UPuzzlePlatformsGameInstance::Join(uint32 Index)
 	// if (!ensure(PlayerController != nullptr)) return;
 	//
 	// PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+}
+
+void UPuzzlePlatformsGameInstance::StartSession()
+{
+	if (SessionInterface.IsValid())
+	{
+		SessionInterface->StartSession(EName::NAME_GameSession);
+	}
 }
 
 void UPuzzlePlatformsGameInstance::LoadMainMenu()
